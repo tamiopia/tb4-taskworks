@@ -28,8 +28,10 @@ junior_time_estimate_min = 1440
 timeout_sec = 7200.0
 
 [verifier]
-# About 6 hidden cases x (1 prefill + 64 decode steps), one process per step.
-timeout_sec = 1800.0
+# Reference run: about 2 minutes (6 hidden cases x 65 sandboxed codec processes).
+# A codec that uses every second of the per-step limits needs
+# 6 x (20 + 64 x 5) s = 34 min plus model compute, so allow 50 min.
+timeout_sec = 3000.0
 
 [environment]
 build_timeout_sec = 900.0
