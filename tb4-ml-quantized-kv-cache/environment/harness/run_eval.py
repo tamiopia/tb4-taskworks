@@ -1,7 +1,7 @@
 """Development evaluation: same protocol, limits and thresholds as the hidden one.
 
     python /app/harness/run_eval.py                  # all development cases
-    python /app/harness/run_eval.py --case dev-1024  # one case
+    python /app/harness/run_eval.py --case dev-512   # one case
     python /app/harness/run_eval.py --no-isolate     # skip per-step sandboxing (faster)
 """
 
@@ -20,7 +20,7 @@ from model import Model  # noqa: E402
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--codec", default="/app/kvcache.py")
+    ap.add_argument("--codec", default="/app/submission/kvcache.py")
     ap.add_argument("--cases", default=os.path.join(os.path.dirname(HERE), "data", "dev_cases.json"))
     ap.add_argument("--weights", default=os.path.join(os.path.dirname(HERE), "model", "dev_weights.npz"))
     ap.add_argument("--case", action="append", help="only run this case id (repeatable)")
@@ -72,6 +72,11 @@ def main():
             json.dump(results, f, indent=1)
     n = sum(r["passed"] for r in results)
     print(f"{n}/{len(results)} cases passed")
+    groups = {}
+    for case, r in zip(cases, results):
+        groups.setdefault(case.get("group", "prefill"), []).append(r["passed"])
+    for g, ok in groups.items():
+        print(f"criterion {g}: {'PASS' if all(ok) else 'FAIL'} ({sum(ok)}/{len(ok)} cases)")
     sys.exit(0 if n == len(results) else 1)
 
 

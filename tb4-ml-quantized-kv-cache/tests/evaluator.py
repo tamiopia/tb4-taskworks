@@ -1,7 +1,7 @@
 """Evaluation protocol for KVCodec implementations.
 
 The same file is used by /app/harness/run_eval.py (development cases) and by
-the hidden verifier. See /app/instruction for the rules it enforces.
+the hidden verifier. /app/TASK_CONTRACT.md describes the rules it enforces.
 """
 
 import hashlib
@@ -35,7 +35,7 @@ BUDGET_FIXED = 65536
 MEAN_KL_MAX = 0.012
 MAX_KL_MAX = 0.060
 PREFILL_SECONDS = 20.0
-DECODE_STEP_SECONDS = 5.0
+DECODE_STEP_SECONDS = 3.0
 MAX_BLOB_BYTES = 64 << 20
 
 WORKER = os.path.join(HERE, "codec_worker.py")
@@ -117,18 +117,6 @@ def _world_writable_dirs():
     return top
 
 
-def _ancestors():
-    pids, pid = set(), os.getpid()
-    while pid > 1:
-        pids.add(pid)
-        try:
-            with open(f"/proc/{pid}/stat") as f:
-                pid = int(f.read().rsplit(")", 1)[1].split()[1])
-        except OSError:
-            break
-    return pids
-
-
 def _pids_by_uid():
     res = {}
     for d in os.listdir("/proc"):
@@ -143,21 +131,6 @@ def _pids_by_uid():
         except OSError:
             pass
     return res
-
-
-def kill_stray_processes():
-    """Kill every process that is not PID 1, this process or one of its ancestors."""
-    keep = _ancestors() | {1}
-    for _ in range(20):
-        victims = [p for p in _pids_by_uid() if p not in keep]
-        if not victims:
-            return
-        for p in victims:
-            try:
-                os.kill(p, signal.SIGKILL)
-            except OSError:
-                pass
-        time.sleep(0.05)
 
 
 def _remove_sysv_ipc():
